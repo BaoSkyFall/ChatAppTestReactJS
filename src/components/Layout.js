@@ -34,12 +34,13 @@ class Layout extends Component {
         socket.emit('LOGOUT')
         this.setState({ user: null });
     }
+    
     render() {
         const { title } = this.props;
-        const { socket, user } = this.state;
+        const { socket, user,matching } = this.state;
         return (
             user ? <div className="container">
-                <ChatContainer user={user} socket={socket} logout={this.logout} />
+                <ChatContainer user={user} socket={socket}  logout={this.logout} />
             </div> :
                 <div className="container">
                     <LoginForm socket={socket} setUser={this.setUser} />

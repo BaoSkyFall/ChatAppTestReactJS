@@ -3,6 +3,7 @@ import SideBar from './Sidebar'
 import ChatHeading from './ChatHeading'
 import Messages from './messages/Messages';
 import MessageInput from './messages/MessageInput';
+import TicTacToe from './game/TicTacToe';
 
 class ChatContainer extends Component {
     constructor(props) {
@@ -10,7 +11,7 @@ class ChatContainer extends Component {
         this.state = {
             chats: [],
             activeChat: null,
-
+            matching: false
         }
         this.resetChat = this.resetChat.bind(this)
 
@@ -32,7 +33,7 @@ class ChatContainer extends Component {
 
         return this.addChat(chat, true);
     }
-    addChat = (chat, reset=false) => {
+    addChat = (chat, reset = false) => {
         const { socket } = this.props;
         const { chats } = this.state;
         const newChats = reset ? [chat] : [...chats, chat];
@@ -43,6 +44,7 @@ class ChatContainer extends Component {
 
 
     }
+
     addMessageToChat = (chatId) => {
         return message => {
             const { chats } = this.state;
@@ -61,14 +63,17 @@ class ChatContainer extends Component {
         // socket.emit("COMMUNITY_CHAT", this.resetChat)
     }
     initSocket(socket) {
-        const { user } = this.props;
+        var { matching } = this.state;
         socket.emit("COMMUNITY_CHAT", this.resetChat)
-        
+
         socket.on("PRIVATE_MESSAGE", this.addChat);
         socket.on("connect", () => {
-            socket.emit("COMMUNITY_CHAT",this.resetChat)
+            socket.emit("COMMUNITY_CHAT", this.resetChat)
         })
-        socket.on("FIND_GAME", this.addChat);
+        socket.on("FIND_GAME", () => {
+            this.setState({ matching: true })
+            console.log('matching:', this.state.matching);
+        });
         // socket.emit("PRIVATE_MESSAGE",{reciever:"Baoit",sender: user.name})
     }
     findGame = (user) => {
@@ -76,15 +81,15 @@ class ChatContainer extends Component {
         console.log('user:', user);
         socket.emit("FIND_GAME", { user });
     }
-    sendOpenPrivateMessage = (reciever)=> {
+    sendOpenPrivateMessage = (reciever) => {
         console.log('reciever:', reciever);
 
-        const { socket,user } = this.props;
+        const { socket, user } = this.props;
         socket.emit("PRIVATE_MESSAGE", { reciever, sender: user.name });
     }
     render() {
         const { user, logout } = this.props
-        const { chats, activeChat } = this.state
+        const { chats, activeChat, matching } = this.state
         return (
             <div className="container">
                 <SideBar
@@ -94,31 +99,36 @@ class ChatContainer extends Component {
                     activeChat={activeChat}
                     setActiveChat={this.setActiveChat}
                     onsendOpenPrivateMessage={this.sendOpenPrivateMessage}
-                    findGame= {this.findGame}
+                    findGame={this.findGame}
+                    matching={matching}
                 />
                 <div className="chat-room-container">
                     {
-                        activeChat !== null ? (<div className="chat-room">
-                            <ChatHeading name={activeChat.name} />
-                            <Messages
-                                messages={activeChat.messages}
-                                user={user}
-                                typingUsers={activeChat.typingUsers}
-                            />
-                            <MessageInput
-                                sendMessage={
-                                    (message) => {
-                                        this.sendMessage(activeChat.id, message);
-                                    }
-                                }
-                                sendTyping={
-                                    (isTyping) => {
-                                        this.sendTyping(activeChat.id, isTyping);
-                                    }
-                                }
-                            />
-                        </div>) : (<div className="chat-room choose">Choose a Chat!</div>)
+                        matching ? (<div className="chat-room"><TicTacToe></TicTacToe></div>) : (<div>
+                            {
+                                activeChat !== null && !matching ? (<div className="chat-room">
+                                    <ChatHeading name={activeChat.name} />
+                                    <Messages
+                                        messages={activeChat.messages}
+                                        user={user}
+                                        typingUsers={activeChat.typingUsers}
+                                    />
+                                    <MessageInput
+                                        sendMessage={
+                                            (message) => {
+                                                this.sendMessage(activeChat.id, message);
+                                            }
+                                        }
+                                        sendTyping={
+                                            (isTyping) => {
+                                                this.sendTyping(activeChat.id, isTyping);
+                                            }
+                                        }
+                                    />
+                                </div>) : (<div className="chat-room choose">You are in!</div>)
 
+                            }
+                        </div>)
                     }
                 </div>
             </div>

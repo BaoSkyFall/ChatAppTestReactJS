@@ -1,0 +1,38 @@
+.board{    
+    border: 15px solid #0071f3;
+    border-radius: 10px; 
+
+    padding: 0px;    
+}
+
+.board-row{
+    margin: 0;
+    padding: 0;
+    height: 23.95px;
+}
+
+.square{   
+    cursor: default !important;
+    
+    width: 23.95px;
+    height: 23.95px;
+
+    margin: 0;
+    padding: 0;
+
+    border: 1px solid rgb(0, 102, 255);    
+    background-color: white;
+    font-size: 19px;
+
+    font-weight: bold;
+
+    
+}
+.active{
+    border : 3px solid gold!important;
+}
+
+
+
+
+

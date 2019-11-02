@@ -49,7 +49,7 @@ class Messages extends Component {
                                             <div className="message">{mes.message}</div>
                                         </div>
                                     </div>)
-                            }) : (<div></div>)
+                            }) : (<div>Lobby</div>)
 
                         }
                         {/* {

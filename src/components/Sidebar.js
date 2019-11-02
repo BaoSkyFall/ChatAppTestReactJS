@@ -1,15 +1,25 @@
 import React, { Component } from 'react';
 import Button from 'react-bootstrap/Button';
+import Spinner from 'react-bootstrap/Spinner'
 import { FaChevronCircleDown } from 'react-icons/fa';
 import { FaAlignJustify } from 'react-icons/fa';
 import { FaSearch } from 'react-icons/fa';
 import { MdEject } from 'react-icons/md';
+import 'bootstrap/dist/css/bootstrap.css';
+
 class Sidebar extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            reciever: ""
+            reciever: "",
+            finding: false,
         }
+
+    }
+    componentDidMount() {
+
+    }
+    init(socket) {
 
     }
     handleSubmit = (e) => {
@@ -28,11 +38,13 @@ class Sidebar extends Component {
         this.setState({ reciever: e.target.value })
     }
     onFindGame = (e) => {
-        const  { findGame, user } = this.props;
+        const { findGame, user } = this.props;
+        this.setState({ finding: true })
         findGame(user);
     }
     render() {
-        const { chats, activeChat, user, setActiveChat, logout, findGame } = this.props;
+        const { chats, activeChat, user, setActiveChat, logout, matching } = this.props;
+        const { finding } = this.state;
         return (
             <div id="side-bar">
                 <div className="heading">
@@ -40,9 +52,17 @@ class Sidebar extends Component {
                     <div className="menu">
                         <FaAlignJustify />
                     </div>
-                    <Button variant="primary" onClick={this.onFindGame} size="lg">
-                        Find Game
-                 </Button>
+                    {
+                        !matching ? (<div>
+
+                            {finding ? <Spinner animation="grow" variant="primary" /> : <Button variant="primary" onClick={this.onFindGame} size="lg">
+                                Find Game
+                    </Button>
+
+                            }
+                        </div>): null
+                    }
+
                 </div>
                 <form onSubmit={this.handleSubmit} className="search">
                     <i className="search-icon"><FaSearch /></i>

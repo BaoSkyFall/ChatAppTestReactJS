@@ -34,11 +34,12 @@ class LoginForm extends Component {
         return (
             <div className="login">
                 <form onSubmit={this.handleSubmit} className="login-form">
-                    <label htmlFor="nickname">
+                    <label className="text-primary" htmlFor="nickname">
                         <h2>Got a Nick Name</h2>
 
                     </label>
                     <input
+                    className="form-control"
                         ref={(input) => {
                             this.textInput = input
                         }}
