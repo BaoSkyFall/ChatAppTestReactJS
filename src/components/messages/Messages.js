@@ -32,7 +32,7 @@ class Messages extends Component {
             console.log(messages.length);
             return (
                 <div ref='container'
-                    className="thread-container">
+                    className="thread-container h-50">
                     <div className="thread">
                         {
 
@@ -49,7 +49,7 @@ class Messages extends Component {
                                             <div className="message">{mes.message}</div>
                                         </div>
                                     </div>)
-                            }) : (<div>Lobby</div>)
+                            }) : (<div>Chat here</div>)
 
                         }
                         {/* {

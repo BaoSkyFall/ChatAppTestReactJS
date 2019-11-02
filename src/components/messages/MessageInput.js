@@ -19,7 +19,7 @@ class MessageInput extends Component {
         this.props.sendMessage(this.state.message);
     }
     sendTyping = () => {
-        this.props.sendTyping(this.state.isTyping);
+     
     }
     // const {}
     render() {

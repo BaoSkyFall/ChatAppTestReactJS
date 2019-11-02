@@ -8,14 +8,14 @@
 .board-row{
     margin: 0;
     padding: 0;
-    height: 23.95px;
+    height: 24.75px;
 }
 
 .square{   
     cursor: default !important;
     
-    width: 23.95px;
-    height: 23.95px;
+    width: 24.75px;
+    height: 24.75px;
 
     margin: 0;
     padding: 0;

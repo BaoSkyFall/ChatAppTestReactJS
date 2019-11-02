@@ -11,7 +11,9 @@ class ChatContainer extends Component {
         this.state = {
             chats: [],
             activeChat: null,
-            matching: false
+            matching: false,
+            room: null,
+            Player1: null,
         }
         this.resetChat = this.resetChat.bind(this)
 
@@ -22,6 +24,9 @@ class ChatContainer extends Component {
     }
     sendMessage = (chatId, message) => {
         const { socket } = this.props;
+        console.log('chatId:', chatId);
+        console.log('message:', message);
+
         socket.emit("MESSAGE_SENT", { chatId, message });
     }
     sendTyping = (chatId, isTyping) => {
@@ -36,8 +41,12 @@ class ChatContainer extends Component {
     addChat = (chat, reset = false) => {
         const { socket } = this.props;
         const { chats } = this.state;
+
+        console.log("state of Chats: ", this.state.chats);
+
         const newChats = reset ? [chat] : [...chats, chat];
         this.setState({ chats: newChats });
+        console.log("state of Chats: ", this.state.chats);
         const messageEvent = "MESSAGE_RECIEVED-" + chat.id;
         socket.on(messageEvent, this.addMessageToChat(chat.id));
 
@@ -48,12 +57,14 @@ class ChatContainer extends Component {
     addMessageToChat = (chatId) => {
         return message => {
             const { chats } = this.state;
+            console.log('chats:', chats);
             let newChats = chats.map((chat) => {
                 if (chat.id === chatId)
                     chat.messages.push(message)
                 return chat
             })
             this.setState({ chats: newChats })
+            console.log("on listen to MESSAGE_RECIEVED: ", this.state.chats);
 
         }
     }
@@ -70,9 +81,12 @@ class ChatContainer extends Component {
         socket.on("connect", () => {
             socket.emit("COMMUNITY_CHAT", this.resetChat)
         })
-        socket.on("FIND_GAME", () => {
-            this.setState({ matching: true })
-            console.log('matching:', this.state.matching);
+        socket.on("FIND_GAME", ({ newChat, room,Player1 }) => {
+            console.log('room:', room)
+            this.setState({ matching: true, room: room,Player1:Player1 })
+            this.setActiveChat(newChat);
+            const { socket, user } = this.props;
+            this.addChat(newChat);
         });
         // socket.emit("PRIVATE_MESSAGE",{reciever:"Baoit",sender: user.name})
     }
@@ -88,27 +102,30 @@ class ChatContainer extends Component {
         socket.emit("PRIVATE_MESSAGE", { reciever, sender: user.name });
     }
     render() {
-        const { user, logout } = this.props
-        const { chats, activeChat, matching } = this.state
+        const { user, logout,socket } = this.props
+        const { chats, activeChat, matching,Player1,room } = this.state
         return (
-            <div className="container">
-                <SideBar
-                    logout={logout}
-                    chats={chats}
-                    user={user}
-                    activeChat={activeChat}
-                    setActiveChat={this.setActiveChat}
-                    onsendOpenPrivateMessage={this.sendOpenPrivateMessage}
-                    findGame={this.findGame}
-                    matching={matching}
-                />
-                <div className="chat-room-container">
+            <div className="row h-100">
+                <div className="col-4">
+                    <SideBar
+                        logout={logout}
+                        chats={chats}
+                        user={user}
+                        activeChat={activeChat}
+                        setActiveChat={this.setActiveChat}
+                        onsendOpenPrivateMessage={this.sendOpenPrivateMessage}
+                        findGame={this.findGame}
+                        matching={matching}
+
+                    />
+                </div>
+                <div className="chat-room-container col-8">
                     {
-                        matching ? (<div className="chat-room"><TicTacToe></TicTacToe></div>) : (<div>
+                        matching ? (<div className="chat-room"><TicTacToe id={room.id} user={user} socket={socket} Player1={Player1} sendMessage={this.sendMessage} activeChat={activeChat} ></TicTacToe></div>) : (<div>
                             {
                                 activeChat !== null && !matching ? (<div className="chat-room">
                                     <ChatHeading name={activeChat.name} />
-                                    <Messages
+                                    {/* <Messages
                                         messages={activeChat.messages}
                                         user={user}
                                         typingUsers={activeChat.typingUsers}
@@ -119,12 +136,8 @@ class ChatContainer extends Component {
                                                 this.sendMessage(activeChat.id, message);
                                             }
                                         }
-                                        sendTyping={
-                                            (isTyping) => {
-                                                this.sendTyping(activeChat.id, isTyping);
-                                            }
-                                        }
-                                    />
+
+                                    /> */}
                                 </div>) : (<div className="chat-room choose">You are in!</div>)
 
                             }

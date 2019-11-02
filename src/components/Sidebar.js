@@ -25,11 +25,7 @@ class Sidebar extends Component {
     handleSubmit = (e) => {
         e.preventDefault();
         const { reciever } = this.state;
-        const { user, chats, onsendOpenPrivateMessage } = this.props;
-
-        console.log(reciever);
-        console.log(user);
-        console.log(chats);
+        const { onsendOpenPrivateMessage } = this.props;
         onsendOpenPrivateMessage(reciever);
 
 
@@ -57,10 +53,10 @@ class Sidebar extends Component {
 
                             {finding ? <Spinner animation="grow" variant="primary" /> : <Button variant="primary" onClick={this.onFindGame} size="lg">
                                 Find Game
-                    </Button>
+                            </Button>
 
                             }
-                        </div>): null
+                        </div>) : null
                     }
 
                 </div>
@@ -78,11 +74,11 @@ class Sidebar extends Component {
 
                     {
                         chats.map((chat) => {
+                            console.log(chat);
                             if (chat.name) {
                                 const lastMessage = chat.messages[chat.messages.length - 1];
-                                const chatSideBarName = chat.users.find((name) => {
-                                    return name !== user.name
-                                }) || "Community"
+                                var chatSideBarName = "Community";
+
                                 const classNames = (activeChat && activeChat.id === chat.id) ? 'active' : ''
 
                                 return (

@@ -39,7 +39,7 @@ class Layout extends Component {
         const { title } = this.props;
         const { socket, user,matching } = this.state;
         return (
-            user ? <div className="container">
+            user ? <div className="h-100">
                 <ChatContainer user={user} socket={socket}  logout={this.logout} />
             </div> :
                 <div className="container">
