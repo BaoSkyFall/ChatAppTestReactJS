@@ -3,6 +3,7 @@ import './TicTacToe.css';
 import Button from 'react-bootstrap/Button';
 import Messages from '../messages/Messages';
 import MessageInput from '../messages/MessageInput';
+import Swal from 'sweetalert2';
 class Square extends React.Component {
     constructor(props) {
         super(props);
@@ -43,11 +44,11 @@ class TicTacToe extends React.Component {
             {
                 if (this.state.turn) {
                     const { socket, id } = this.props;
-                    const squares = this.state.squares.slice();
+                    var squares = this.state.squares.slice();
                     console.log(i);
                     console.log(squares);
                     console.log(this.location);
-                    if (this.state.turn) {
+                    if (this.state.Player1) {
                         squares[i] = 'X';
                     }
                     else {
@@ -58,46 +59,86 @@ class TicTacToe extends React.Component {
                         squares: squares,
                         turn: false,
                         activeIndex: -1,
+                    }, () => {
+                        if (ruleToWin(this.state.squares, i) === true) {
+                            if (this.state.Player1) {
+                                this.setState({
+                                    isFinish: true,
+                                    isWinP1: true,
+                                })
+                                setTimeout(() => {
+                                    Swal.fire({
+                                        title: 'CONGRATULATION !!!, YOU WIN !!!',
+                                        width: 600,
+                                        buttons: "Play Again",
+                                        padding: '3em',
+                                        background: '#fff url()',
+                                        backdrop: `
+                                          rgba(245,0,0,0.5)
+                                          url("https://media.giphy.com/media/2gtoSIzdrSMFO/giphy.gif")
+                                          center
+                                          no-repeat
+                                        `
+                                    })
+                                    // this.onPlayAgainClick();
+                                }, 100)
+
+
+
+                            }
+
+
+                            else {
+                                this.setState({
+                                    isFinish: true,
+                                    isWinP1: false,
+                                })
+                                setTimeout(() => {
+                                    alert('Player X Win !!!');
+                                    Swal.fire({
+                                        title: 'CONGRATULATION !!!, YOU WIN !!!',
+                                        width: 600,
+                                        padding: '3em',
+                                        background: '#fff url()',
+                                        backdrop: `
+                                          rgba(245,0,0,0.5)
+                                          url("https://media.giphy.com/media/2gtoSIzdrSMFO/giphy.gif")
+                                          center
+                                          no-repeat
+                                        `
+                                    })
+                                    this.onPlayAgainClick();
+
+                                }, 100)
+
+                            }
+
+                        }
+                        const { Player1 } = this.state;
+                        var isFinish_temp = ruleToWin(squares, i) ? true : false;
+                        var isWinP1_temp = this.state.Player1 ? true : false;
+                        if (isFinish_temp) {
+                            squares = new Array(400).fill(null);
+                        }
+                        console.log('isFinish_temp:', isFinish_temp);
+                        console.log('isWinP1_temp:', isWinP1_temp);
+                        socket.emit("CHECK_SQUARE_CLICK", { squares, isFinish_temp, isWinP1_temp, Player1, id });
+
                     })
-                    if (ruleToWin(squares, i) === true) {
-                        if (this.state.turn) {
-                            this.setState({
-                                isFinish: true,
-                                isWinP1: false,
-                            })
-
-                        }
 
 
-                        else {
-                            this.setState({
-                                isFinish: true,
-                                isWinP1: true,
-                            })
-                        }
-                        if (this.state.isWinP1) {
-
-                            alert('Player X Win !!!');
-
-                            this.onPlayAgainClick();
-                        }
-                        else {
-                            alert('Player O Win !!!');
-                            this.onPlayAgainClick();
-
-                        }
-                    }
-                    const { isFinish, isWinP1,Player1 } = this.state;
-
-                    socket.emit("CHECK_SQUARE_CLICK", { squares, isFinish, isWinP1, Player1,id });
 
                 }
 
 
             }
         }
+        else {
+
+        }
 
     }
+
     componentDidMount() {
         const { socket } = this.props;
         this.initSocket(socket);
@@ -106,22 +147,40 @@ class TicTacToe extends React.Component {
         const { Player1 } = this.props;
         this.setState({ Player1 });
         socket.on("SEND_PLAYER", ({ Player1 }) => {
+            console.log("socket on Send_Player work");
             this.setState({
                 turn: Player1,
                 Player1: Player1,
             })
         })
-        socket.on("CHECK_SQUARE_CLICK", ({ test }) => {
-            console.log('test:', test);
-        })
-            // this.setState({
-            //     squares: room.squares,
-            //     isFinish: room.isFinish,
-            //     isWinP1: room.isWinP1,
-            //     turn: true
-            // })
+        socket.on("CHECK_SQUARE_CLICK", (room) => {
+            console.log('room:', room)
+            this.setState({
+                squares: room.squares,
+                isFinish: room.isFinish,
+                isWinP1: room.isWinP1,
+                turn: true
+            }, () => {
+                if (this.state.isFinish) {
+                    Swal.fire({
+                        title: 'YOU LOSE !!!',
+                        width: 600,
+                        buttons: "Play Again",
+                        padding: '3em',
+                        background: '#fff url()',
+                        backdrop: `
+                          rgba(0,0,0,0.4)
+                          url("https://media.giphy.com/media/d1G6qsjTJcHYhzxu/giphy.gif")
+                          center top
+                          no-repeat
+                        `
+                    })
+                }
+            })
 
-        // socket.emit("PRIVATE_MESSAGE",{reciever:"Baoit",sender: user.name})
+            // socket.emit("PRIVATE_MESSAGE",{reciever:"Baoit",sender: user.name})
+        })
+
     }
     onPlayAgainClick() {
         this.setState({
@@ -214,6 +273,33 @@ class TicTacToe extends React.Component {
         console.log('mess:', mess)
         sendMessage(id, mess);
     }
+    onSurrender = () => {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You will lose this game!",
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes'
+        }).then((result) => {
+            if (result.value) {
+                Swal.fire({
+                    title: 'YOU LOSE !!!',
+                    width: 600,
+                    buttons: "Play Again",
+                    padding: '3em',
+                    background: '#fff url()',
+                    backdrop: `
+                      rgba(0,0,0,0.4)
+                      url("https://media.giphy.com/media/d1G6qsjTJcHYhzxu/giphy.gif")
+                      center top
+                      no-repeat
+                    `
+                })
+            }
+        })
+    }
     render() {
         let status;
         const { user, activeChat } = this.props;
@@ -234,7 +320,7 @@ class TicTacToe extends React.Component {
                         <div className="mt-2">
                             <Button variant="success" block
                             >Make Request Play Back Step</Button>
-                            <Button variant="danger" block
+                            <Button onClick={this.onSurrender} variant="danger" block
                             >Surrender</Button>
                             {/* <button className="btn btn-success" onClick={() => this.onReverse()}>Reverse {this.state.reverse ? 'DESC' : 'ASC'}</button>
                             <div>
