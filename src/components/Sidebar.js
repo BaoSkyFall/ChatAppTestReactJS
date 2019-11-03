@@ -12,7 +12,6 @@ class Sidebar extends Component {
         super(props);
         this.state = {
             reciever: "",
-            finding: false,
         }
 
     }
@@ -20,7 +19,7 @@ class Sidebar extends Component {
 
     }
     init(socket) {
-
+ 
     }
     handleSubmit = (e) => {
         e.preventDefault();
@@ -35,12 +34,10 @@ class Sidebar extends Component {
     }
     onFindGame = (e) => {
         const { findGame, user } = this.props;
-        this.setState({ finding: true })
         findGame(user);
     }
     render() {
-        const { chats, activeChat, user, setActiveChat, logout, matching } = this.props;
-        const { finding } = this.state;
+        const { finding,chats, activeChat, user, setActiveChat, logout, matching } = this.props;
         return (
             <div id="side-bar">
                 <div className="heading">

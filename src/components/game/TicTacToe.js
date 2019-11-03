@@ -68,19 +68,19 @@ class TicTacToe extends React.Component {
                                 })
                                 setTimeout(() => {
                                     Swal.fire({
-                                        title: 'CONGRATULATION !!!, YOU WIN !!!',
+                                        title: 'CONGRATULATION !!!, YOU WIN   Click OK to Play Again',
                                         width: 600,
-                                        buttons: "Play Again",
+                                     
                                         padding: '3em',
                                         background: '#fff url()',
                                         backdrop: `
-                                          rgba(245,0,0,0.5)
+                                          rgba(245,0,0,0.3)
                                           url("https://media.giphy.com/media/2gtoSIzdrSMFO/giphy.gif")
                                           center
                                           no-repeat
                                         `
                                     })
-                                    // this.onPlayAgainClick();
+                                    this.onPlayAgainClick();
                                 }, 100)
 
 
@@ -101,7 +101,7 @@ class TicTacToe extends React.Component {
                                         padding: '3em',
                                         background: '#fff url()',
                                         backdrop: `
-                                          rgba(245,0,0,0.5)
+                                          rgba(245,0,0,0.3)
                                           url("https://media.giphy.com/media/2gtoSIzdrSMFO/giphy.gif")
                                           center
                                           no-repeat
@@ -122,7 +122,7 @@ class TicTacToe extends React.Component {
                         }
                         console.log('isFinish_temp:', isFinish_temp);
                         console.log('isWinP1_temp:', isWinP1_temp);
-                        socket.emit("CHECK_SQUARE_CLICK", { squares, isFinish_temp, isWinP1_temp, Player1, id });
+                        socket.emit("CHECK_SQUARE_CLICK", { squares, isFinish_temp, isWinP1_temp, Player1, id,i });
 
                     })
 
@@ -163,9 +163,9 @@ class TicTacToe extends React.Component {
             }, () => {
                 if (this.state.isFinish) {
                     Swal.fire({
-                        title: 'YOU LOSE !!!',
+                        title: 'YOU LOSE !!! \nClick OK to Play Again',
                         width: 600,
-                        buttons: "Play Again",
+                        buttons: ["Play Again"],
                         padding: '3em',
                         background: '#fff url()',
                         backdrop: `
@@ -175,10 +175,50 @@ class TicTacToe extends React.Component {
                           no-repeat
                         `
                     })
+                this.onPlayAgainClick();
+                    
                 }
             })
 
             // socket.emit("PRIVATE_MESSAGE",{reciever:"Baoit",sender: user.name})
+        })
+        socket.on("SURRENDER",(room)=>{
+            Swal.fire({
+                title: 'YOUR OPPONENT SURRENDER !!!, YOU WIN !!!Click OK to Play Again',
+                width: 600,
+                buttons: true,
+                buttons: ["Play Again"],
+                padding: '3em',
+                background: '#fff url()',
+                backdrop: `
+                  rgba(245,0,0,0.3)
+                  url("https://media.giphy.com/media/lrzjrZkrLn2YDTVnpD/giphy.gif")
+                  center top
+                  no-repeat
+                `
+            })
+            this.onPlayAgainClick()
+        })
+        socket.on("EXIT_ROOM",()=>{
+            console.log("on Exit Room")
+            Swal.fire({
+                title: 'YOU WIN THIS GAME!!! YOUR OPPONENT HAS QUIT\n Click OK to Go Back Lobby',
+                width: 600,
+             
+                padding: '3em',
+                background: '#fff url()',
+                backdrop: `
+                  rgba(245,0,0,0.3)
+                  url("https://media.giphy.com/media/2gtoSIzdrSMFO/giphy.gif")
+                  center
+                  no-repeat
+                `
+            }).then((result) => {
+                if(result.value)
+            this.props.exitRoom();
+                
+                
+            })
         })
 
     }
@@ -189,6 +229,7 @@ class TicTacToe extends React.Component {
             isFinish: false,
             isWinP1: false,
         })
+
     }
     onchangeTurn(value, i) {
         console.log(i);
@@ -273,7 +314,16 @@ class TicTacToe extends React.Component {
         console.log('mess:', mess)
         sendMessage(id, mess);
     }
+    onExitRoom = () => {
+        const {exitRoom,socket,id,Player1}= this.props;
+        socket.emit("EXIT_ROOM",{id,Player1});
+
+        exitRoom();
+
+    }
     onSurrender = () => {
+        const {socket,id}= this.props;
+        const {Player1} = this.state;
         Swal.fire({
             title: 'Are you sure?',
             text: "You will lose this game!",
@@ -284,10 +334,12 @@ class TicTacToe extends React.Component {
             confirmButtonText: 'Yes'
         }).then((result) => {
             if (result.value) {
+                socket.emit("SURRENDER",({id,Player1}))                
                 Swal.fire({
-                    title: 'YOU LOSE !!!',
+                    title: 'YOU LOSE !!!\nClick OK to Play Again',
                     width: 600,
-                    buttons: "Play Again",
+                    buttons: true,
+                    buttons: ["Play Again"],
                     padding: '3em',
                     background: '#fff url()',
                     backdrop: `
@@ -297,9 +349,12 @@ class TicTacToe extends React.Component {
                       no-repeat
                     `
                 })
+                this.onPlayAgainClick();
+
             }
         })
     }
+
     render() {
         let status;
         const { user, activeChat } = this.props;
@@ -319,9 +374,11 @@ class TicTacToe extends React.Component {
                         </div>
                         <div className="mt-2">
                             <Button variant="success" block
-                            >Make Request Play Back Step</Button>
-                            <Button onClick={this.onSurrender} variant="danger" block
+                            >Request Undo</Button>
+                            <Button onClick={this.onSurrender} variant="warning" block
                             >Surrender</Button>
+                            <Button onClick={this.onExitRoom} variant="danger" block
+                            >Exit Room</Button>
                             {/* <button className="btn btn-success" onClick={() => this.onReverse()}>Reverse {this.state.reverse ? 'DESC' : 'ASC'}</button>
                             <div>
                                 {
