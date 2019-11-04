@@ -25,12 +25,14 @@ class TicTacToe extends React.Component {
         this.index = 0;
         this.active = '';
         this.reverse = false;
+        this.undo = true;
         this.state = {
             squares: Array(400).fill(null),
             turn: null,
             Player1: true,
             isFinish: false,
             isWinP1: false,
+            i: null,
             reeverse: false,
             activeIndex: -1
         };
@@ -70,7 +72,7 @@ class TicTacToe extends React.Component {
                                     Swal.fire({
                                         title: 'CONGRATULATION !!!, YOU WIN   Click OK to Play Again',
                                         width: 600,
-                                     
+
                                         padding: '3em',
                                         background: '#fff url()',
                                         backdrop: `
@@ -122,7 +124,7 @@ class TicTacToe extends React.Component {
                         }
                         console.log('isFinish_temp:', isFinish_temp);
                         console.log('isWinP1_temp:', isWinP1_temp);
-                        socket.emit("CHECK_SQUARE_CLICK", { squares, isFinish_temp, isWinP1_temp, Player1, id,i });
+                        socket.emit("CHECK_SQUARE_CLICK", { squares, isFinish_temp, isWinP1_temp, Player1, id, i });
 
                     })
 
@@ -159,6 +161,7 @@ class TicTacToe extends React.Component {
                 squares: room.squares,
                 isFinish: room.isFinish,
                 isWinP1: room.isWinP1,
+                i: room.i,
                 turn: true
             }, () => {
                 if (this.state.isFinish) {
@@ -175,14 +178,14 @@ class TicTacToe extends React.Component {
                           no-repeat
                         `
                     })
-                this.onPlayAgainClick();
-                    
+                    this.onPlayAgainClick();
+
                 }
             })
 
             // socket.emit("PRIVATE_MESSAGE",{reciever:"Baoit",sender: user.name})
         })
-        socket.on("SURRENDER",(room)=>{
+        socket.on("SURRENDER", (room) => {
             Swal.fire({
                 title: 'YOUR OPPONENT SURRENDER !!!, YOU WIN !!!Click OK to Play Again',
                 width: 600,
@@ -199,12 +202,12 @@ class TicTacToe extends React.Component {
             })
             this.onPlayAgainClick()
         })
-        socket.on("EXIT_ROOM",()=>{
+        socket.on("EXIT_ROOM", () => {
             console.log("on Exit Room")
             Swal.fire({
                 title: 'YOU WIN THIS GAME!!! YOUR OPPONENT HAS QUIT\n Click OK to Go Back Lobby',
                 width: 600,
-             
+
                 padding: '3em',
                 background: '#fff url()',
                 backdrop: `
@@ -214,11 +217,57 @@ class TicTacToe extends React.Component {
                   no-repeat
                 `
             }).then((result) => {
-                if(result.value)
-            this.props.exitRoom();
-                
-                
+                if (result.value)
+                    this.props.exitRoom();
+
+
             })
+        })
+        socket.on("REQUEST_UNDO", () => {
+            const { socket, id } = this.props;
+            const { Player1 } = this.state;
+            console.log("on Exit Room")
+            Swal.fire({
+                title: 'Your opponent want to Undo?',
+                text: "Do you want?",
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            }).then((result) => {
+                if (result.value) {
+                    let confirm = true;
+                    socket.emit("CONFIRM_UNDO", ({ id, Player1, confirm }))
+                    var squares = this.state.squares.slice();
+                    squares[this.state.i] = null;
+                    this.setState({ turn: false, squares });
+
+                }
+                else {
+                    let confirm = false;
+                    socket.emit("CONFIRM_UNDO", ({ id, Player1, confirm }))
+                }
+            })
+        })
+        socket.on("CONFIRM_UNDO", (room) => {
+            console.log('room:', room)
+            //Confirm = true
+            if (room.confirm) {
+                this.setState({
+                    squares: room.squares,
+                    turn: true
+                })
+            }
+            //Confirm = false            
+            else {
+                Swal.fire({
+                    type: 'error',
+                    title: 'Oops...',
+                    text: 'Your Oppodent Denied...!',
+                    footer: ''
+                })
+            }
         })
 
     }
@@ -315,15 +364,15 @@ class TicTacToe extends React.Component {
         sendMessage(id, mess);
     }
     onExitRoom = () => {
-        const {exitRoom,socket,id,Player1}= this.props;
-        socket.emit("EXIT_ROOM",{id,Player1});
+        const { exitRoom, socket, id, Player1 } = this.props;
+        socket.emit("EXIT_ROOM", { id, Player1 });
 
         exitRoom();
 
     }
     onSurrender = () => {
-        const {socket,id}= this.props;
-        const {Player1} = this.state;
+        const { socket, id } = this.props;
+        const { Player1 } = this.state;
         Swal.fire({
             title: 'Are you sure?',
             text: "You will lose this game!",
@@ -334,7 +383,7 @@ class TicTacToe extends React.Component {
             confirmButtonText: 'Yes'
         }).then((result) => {
             if (result.value) {
-                socket.emit("SURRENDER",({id,Player1}))                
+                socket.emit("SURRENDER", ({ id, Player1 }))
                 Swal.fire({
                     title: 'YOU LOSE !!!\nClick OK to Play Again',
                     width: 600,
@@ -354,11 +403,31 @@ class TicTacToe extends React.Component {
             }
         })
     }
+    onRequestUndo = () => {
+        Swal.fire({
+            title: 'Are you sure? ',
+            text: "You just have only 1 time to request Undo!",
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes'
+        }).then((result) => {
+            if (result.value) {
+                const { socket, id } = this.props;
+                const { Player1 } = this.state;
+                socket.emit("REQUEST_UNDO", ({ id, Player1 }))
+                this.undo = false;
 
+
+            }
+        })
+    }
     render() {
         let status;
         const { user, activeChat } = this.props;
-
+        const { turn,i } = this.state;
+        const undo = this.undo;
 
 
 
@@ -373,12 +442,13 @@ class TicTacToe extends React.Component {
 
                         </div>
                         <div className="mt-2">
-                            <Button variant="success" block
-                            >Request Undo</Button>
+
                             <Button onClick={this.onSurrender} variant="warning" block
                             >Surrender</Button>
                             <Button onClick={this.onExitRoom} variant="danger" block
                             >Exit Room</Button>
+                            {undo && !turn && i ? <Button variant="success" block onClick={this.onRequestUndo}
+                            >Request Undo</Button> : null}
                             {/* <button className="btn btn-success" onClick={() => this.onReverse()}>Reverse {this.state.reverse ? 'DESC' : 'ASC'}</button>
                             <div>
                                 {
